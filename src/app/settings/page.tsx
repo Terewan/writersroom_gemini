@@ -19,6 +19,18 @@ export default function SettingsPage() {
         autoApprove: false
     })
 
+    const [isVerifying, setIsVerifying] = useState({
+        openai: false,
+        anthropic: false,
+        gemini: false
+    })
+
+    const [verifyErrors, setVerifyErrors] = useState({
+        openai: '',
+        anthropic: '',
+        gemini: ''
+    })
+
     // Load keys from localStorage on mount
     useEffect(() => {
         const storedOpenAI = localStorage.getItem('WRITERS_ROOM_OPENAI_KEY')
@@ -47,7 +59,7 @@ export default function SettingsPage() {
         setTimeout(() => setSavedStatus(prev => ({ ...prev, model: false })), 2000)
     }
 
-    const handleSave = (provider: 'openai' | 'anthropic' | 'gemini', value: string) => {
+    const handleSave = async (provider: 'openai' | 'anthropic' | 'gemini', value: string) => {
         let keyName = ''
         switch (provider) {
             case 'openai': keyName = 'WRITERS_ROOM_OPENAI_KEY'; break;
@@ -55,17 +67,38 @@ export default function SettingsPage() {
             case 'gemini': keyName = 'WRITERS_ROOM_GEMINI_KEY'; break;
         }
 
+        setVerifyErrors(prev => ({ ...prev, [provider]: '' }))
+
         if (value.trim() === '') {
             localStorage.removeItem(keyName)
-        } else {
-            localStorage.setItem(keyName, value.trim())
+            setSavedStatus(prev => ({ ...prev, [provider]: true }))
+            setTimeout(() => setSavedStatus(prev => ({ ...prev, [provider]: false })), 2000)
+            return
         }
 
-        // Show saved feedback
-        setSavedStatus(prev => ({ ...prev, [provider]: true }))
-        setTimeout(() => {
-            setSavedStatus(prev => ({ ...prev, [provider]: false }))
-        }, 2000)
+        setIsVerifying(prev => ({ ...prev, [provider]: true }))
+
+        try {
+            const res = await fetch('/api/verify-key', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ provider, apiKey: value.trim() })
+            })
+
+            const data = await res.json()
+
+            if (res.ok && data.valid) {
+                localStorage.setItem(keyName, value.trim())
+                setSavedStatus(prev => ({ ...prev, [provider]: true }))
+                setTimeout(() => setSavedStatus(prev => ({ ...prev, [provider]: false })), 2000)
+            } else {
+                setVerifyErrors(prev => ({ ...prev, [provider]: data.error || 'Invalid API Key' }))
+            }
+        } catch (error) {
+            setVerifyErrors(prev => ({ ...prev, [provider]: 'Network error verifying key' }))
+        } finally {
+            setIsVerifying(prev => ({ ...prev, [provider]: false }))
+        }
     }
 
     return (
@@ -93,14 +126,17 @@ export default function SettingsPage() {
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                         value={openAIKey}
                                         onChange={(e) => setOpenAIKey(e.target.value)}
+                                        disabled={isVerifying.openai}
                                     />
                                     <button
                                         onClick={() => handleSave('openai', openAIKey)}
-                                        className={`h-10 px-4 py-2 rounded-md font-medium text-sm transition-colors ${savedStatus.openai ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                                        disabled={isVerifying.openai}
+                                        className={`h-10 px-4 py-2 rounded-md font-medium text-sm transition-colors disabled:opacity-50 flex-shrink-0 min-w-24 ${savedStatus.openai ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
                                     >
-                                        {savedStatus.openai ? 'Saved!' : 'Save'}
+                                        {isVerifying.openai ? 'Verifying...' : savedStatus.openai ? 'Valid & Saved' : 'Save'}
                                     </button>
                                 </div>
+                                {verifyErrors.openai && <p className="text-sm text-destructive">{verifyErrors.openai}</p>}
                             </div>
 
                             <div className="space-y-2">
@@ -112,14 +148,17 @@ export default function SettingsPage() {
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                         value={anthropicKey}
                                         onChange={(e) => setAnthropicKey(e.target.value)}
+                                        disabled={isVerifying.anthropic}
                                     />
                                     <button
                                         onClick={() => handleSave('anthropic', anthropicKey)}
-                                        className={`h-10 px-4 py-2 rounded-md font-medium text-sm transition-colors ${savedStatus.anthropic ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                                        disabled={isVerifying.anthropic}
+                                        className={`h-10 px-4 py-2 rounded-md font-medium text-sm transition-colors disabled:opacity-50 flex-shrink-0 min-w-24 ${savedStatus.anthropic ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
                                     >
-                                        {savedStatus.anthropic ? 'Saved!' : 'Save'}
+                                        {isVerifying.anthropic ? 'Verifying...' : savedStatus.anthropic ? 'Valid & Saved' : 'Save'}
                                     </button>
                                 </div>
+                                {verifyErrors.anthropic && <p className="text-sm text-destructive">{verifyErrors.anthropic}</p>}
                             </div>
 
                             <div className="space-y-2">
@@ -131,14 +170,17 @@ export default function SettingsPage() {
                                         className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                                         value={geminiKey}
                                         onChange={(e) => setGeminiKey(e.target.value)}
+                                        disabled={isVerifying.gemini}
                                     />
                                     <button
                                         onClick={() => handleSave('gemini', geminiKey)}
-                                        className={`h-10 px-4 py-2 rounded-md font-medium text-sm transition-colors ${savedStatus.gemini ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
+                                        disabled={isVerifying.gemini}
+                                        className={`h-10 px-4 py-2 rounded-md font-medium text-sm transition-colors disabled:opacity-50 flex-shrink-0 min-w-24 ${savedStatus.gemini ? 'bg-green-600 text-white hover:bg-green-700' : 'bg-secondary text-secondary-foreground hover:bg-secondary/80'}`}
                                     >
-                                        {savedStatus.gemini ? 'Saved!' : 'Save'}
+                                        {isVerifying.gemini ? 'Verifying...' : savedStatus.gemini ? 'Valid & Saved' : 'Save'}
                                     </button>
                                 </div>
+                                {verifyErrors.gemini && <p className="text-sm text-destructive">{verifyErrors.gemini}</p>}
                             </div>
                         </div>
                     </section>
@@ -165,7 +207,9 @@ export default function SettingsPage() {
                                     <option value="claude-3-5-sonnet-20240620">Claude 3.5 Sonnet (Anthropic)</option>
                                     <option value="gemini-1.5-pro">Gemini 1.5 Pro (Google)</option>
                                 </select>
-                                <p className="text-xs text-muted-foreground">This model will be used as the primary orchestrator.</p>
+                                <p className="text-xs text-muted-foreground">
+                                    <strong className="text-foreground">This dictates which AI provider is used.</strong> Make sure you have entered the corresponding API Key above for your selected model or it will fail.
+                                </p>
                                 {savedStatus.model && (
                                     <span className="text-sm text-green-500 font-medium">✅ Default Model Saved!</span>
                                 )}
