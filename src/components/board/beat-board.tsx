@@ -189,12 +189,27 @@ export function BeatBoard() {
         })
     }
 
+    const handleAddBeat = () => {
+        const newCard: BeatCard = {
+            id: `new-card-${Date.now()}`,
+            actId: columns[0].id,
+            title: 'New Beat',
+            content: 'Describe what happens here...',
+            type: 'plot',
+            colorHex: '#8b5cf6' // Default purple
+        }
+        setCards(prev => [newCard, ...prev])
+    }
+
     return (
         <div className="h-full w-full flex flex-col pt-4 overflow-hidden">
             <div className="flex px-6 mb-4 items-center justify-between">
                 <h2 className="text-xl font-bold">Show Beat Sheet</h2>
                 <div className="flex gap-2">
-                    <button className="text-sm bg-primary/10 text-primary px-3 py-1.5 rounded hover:bg-primary/20 transition-colors">
+                    <button
+                        onClick={handleAddBeat}
+                        className="text-sm bg-primary/10 text-primary px-3 py-1.5 rounded hover:bg-primary/20 transition-colors"
+                    >
                         + Add Beat
                     </button>
                 </div>
