@@ -45,6 +45,23 @@ export function ShowBible({ logline, coreHook, onLoglineChange, onHookChange }: 
         { id: 'proposals', label: 'Inbox (2)', icon: <CheckCircle2 className="w-4 h-4" /> },
     ]
 
+    // Local state to track edits before saving
+    const [localLogline, setLocalLogline] = useState(logline || '')
+    const [localHook, setLocalHook] = useState(coreHook || '')
+    const [savedState, setSavedState] = useState<'idle' | 'saved_logline' | 'saved_hook'>('idle')
+
+    const handleSaveLogline = () => {
+        onLoglineChange?.(localLogline)
+        setSavedState('saved_logline')
+        setTimeout(() => setSavedState('idle'), 2000)
+    }
+
+    const handleSaveHook = () => {
+        onHookChange?.(localHook)
+        setSavedState('saved_hook')
+        setTimeout(() => setSavedState('idle'), 2000)
+    }
+
     return (
         <div className="flex flex-col h-full bg-background border-l">
             {/* Header */}
@@ -92,26 +109,52 @@ export function ShowBible({ logline, coreHook, onLoglineChange, onHookChange }: 
                     <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="text-2xl font-bold">Project Logline</h3>
+                            {savedState === 'saved_logline' && (
+                                <span className="text-sm text-green-500 font-medium flex items-center gap-1">
+                                    <CheckCircle2 className="w-4 h-4" /> Saved!
+                                </span>
+                            )}
                         </div>
-                        <div className="p-0 rounded-lg border focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
+                        <div className="p-0 rounded-t-lg border border-b-0 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
                             <textarea
-                                className="w-full h-24 p-4 bg-muted/30 text-lg italic text-muted-foreground leading-relaxed resize-none rounded-lg outline-none"
+                                className="w-full h-24 p-4 bg-muted/30 text-lg italic text-muted-foreground leading-relaxed resize-none rounded-t-lg outline-none"
                                 placeholder="Enter your project's logline here..."
-                                value={logline}
-                                onChange={(e) => onLoglineChange?.(e.target.value)}
+                                value={localLogline}
+                                onChange={(e) => setLocalLogline(e.target.value)}
                             />
+                        </div>
+                        <div className="bg-muted px-4 py-2 rounded-b-lg border border-t-0 flex justify-end">
+                            <button
+                                onClick={handleSaveLogline}
+                                className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-1.5 rounded-md text-sm font-medium transition-colors"
+                            >
+                                Save Logline to Room
+                            </button>
                         </div>
 
                         <div className="flex items-center justify-between mt-8 mb-4">
                             <h3 className="text-xl font-bold">Core Hook</h3>
+                            {savedState === 'saved_hook' && (
+                                <span className="text-sm text-green-500 font-medium flex items-center gap-1">
+                                    <CheckCircle2 className="w-4 h-4" /> Saved!
+                                </span>
+                            )}
                         </div>
-                        <div className="p-0 rounded-lg border focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
+                        <div className="p-0 rounded-t-lg border border-b-0 focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
                             <textarea
-                                className="w-full h-32 p-4 bg-muted/10 text-foreground/80 leading-relaxed resize-none rounded-lg outline-none"
+                                className="w-full h-32 p-4 bg-muted/10 text-foreground/80 leading-relaxed resize-none rounded-t-lg outline-none"
                                 placeholder="Enter the core hook, themes, or visual style here..."
-                                value={coreHook}
-                                onChange={(e) => onHookChange?.(e.target.value)}
+                                value={localHook}
+                                onChange={(e) => setLocalHook(e.target.value)}
                             />
+                        </div>
+                        <div className="bg-muted px-4 py-2 rounded-b-lg border border-t-0 flex justify-end">
+                            <button
+                                onClick={handleSaveHook}
+                                className="bg-primary text-primary-foreground hover:bg-primary/90 px-4 py-1.5 rounded-md text-sm font-medium transition-colors"
+                            >
+                                Save Hook to Room
+                            </button>
                         </div>
                     </div>
                 )}
