@@ -6,28 +6,13 @@ import { Send, User, AlertCircle, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAppStore } from '@/lib/store'
 
-interface ChatAgent {
-    id: string
-    name: string
-    role: string
-    color: string
-    provider: string
-    model: string
-    prompt: string
-}
-
-const MOCK_AGENTS: ChatAgent[] = [
-    { id: '1', name: 'Dr. Aris', role: 'Science Advisor', color: 'bg-blue-500', provider: 'openai', model: 'gpt-4o-mini', prompt: 'You are Dr. Aris, a meticulous astrophysicist. You poke holes in the science of the plot.' },
-    { id: '2', name: 'Sarah', role: 'Character Specialist', color: 'bg-rose-500', provider: 'anthropic', model: 'claude-3-5-sonnet-20240620', prompt: 'You are Sarah, a character psychology expert. You focus purely on emotional motivations and arcs.' },
-]
-
 export function WritersRoomChat() {
-    const { globalLogline, globalHook } = useAppStore()
-    const [activeAgentId, setActiveAgentId] = useState<string>(MOCK_AGENTS[0].id)
+    const { globalLogline, globalHook, customAgents } = useAppStore()
+    const [activeAgentIds, setActiveAgentIds] = useState<string[]>([customAgents[0]?.id].filter(Boolean) as string[])
     const [roundsTotal, setRoundsTotal] = useState<number>(3)
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    const activeAgent = MOCK_AGENTS.find(a => a.id === activeAgentId)
+    const activeAgents = customAgents.filter(a => activeAgentIds.includes(a.id))
 
     const [userKeys, setUserKeys] = useState({ openai: '', anthropic: '', gemini: '' })
     const [defaultModel, setDefaultModel] = useState('gpt-4o-mini')
@@ -43,14 +28,18 @@ export function WritersRoomChat() {
         if (storedModel) setDefaultModel(storedModel)
     }, [])
 
-    const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
+    const { messages, input, handleInputChange, handleSubmit, isLoading, error } = useChat({
         api: '/api/chat',
         body: {
             agentConfig: {
-                provider: activeAgent?.provider || (defaultModel.includes('claude') ? 'anthropic' : defaultModel.includes('gemini') ? 'google' : 'openai'),
-                model: activeAgent?.model || defaultModel,
-                systemPrompt: activeAgent?.prompt,
-                name: activeAgent?.name
+                provider: activeAgents.length === 1
+                    ? activeAgents[0].provider
+                    : (defaultModel.includes('claude') ? 'anthropic' : defaultModel.includes('gemini') ? 'google' : 'openai'),
+                model: activeAgents.length === 1 ? activeAgents[0].model : defaultModel,
+                systemPrompt: activeAgents.length === 1
+                    ? activeAgents[0].prompt
+                    : `You are simulating a TV writer's room. You must act out the following personas discussing the user's idea:\n\n` + activeAgents.map(a => `[${a.name} - ${a.role}]: ${a.prompt}`).join('\n\n'),
+                name: activeAgents.length === 1 ? activeAgents[0].name : 'The Room'
             },
             showBibleContext: {
                 logline: globalLogline,
@@ -102,7 +91,7 @@ export function WritersRoomChat() {
                     const isUser = m.role === 'user'
                     // Find which agent spoke if it's an assistant message
                     // We assume m.name is passed, otherwise fallback to activeAgent
-                    const msgAgent = isUser ? null : MOCK_AGENTS.find(a => a.name === m.name) || activeAgent
+                    const msgAgent = isUser ? null : customAgents.find(a => a.name === m.name) || activeAgents[0]
 
                     return (
                         <div key={m.id} className="flex gap-4 group hover:bg-muted/50 p-2 -mx-2 rounded-lg transition-colors">
@@ -158,6 +147,17 @@ export function WritersRoomChat() {
                         <span className="animate-pulse animation-delay-400">●</span>
                     </div>
                 )}
+
+                {error && (
+                    <div className="flex items-start gap-2 text-sm bg-red-500/10 text-red-500 p-3 rounded-lg mx-2 border border-red-500/20">
+                        <AlertCircle size={16} className="mt-0.5 flex-shrink-0" />
+                        <div>
+                            <span className="font-semibold block mb-0.5">Connection Error</span>
+                            {error.message || "An error occurred connecting to the AI provider. Please check your API keys."}
+                        </div>
+                    </div>
+                )}
+
                 <div ref={messagesEndRef} />
             </div>
 
@@ -167,14 +167,14 @@ export function WritersRoomChat() {
                     <div className="flex gap-2 items-center">
                         <span className="text-xs text-muted-foreground font-medium">Directing:</span>
                         <div className="flex gap-1.5 flex-wrap">
-                            {MOCK_AGENTS.map(agent => (
+                            {customAgents.map(agent => (
                                 <button
                                     key={agent.id}
                                     type="button"
-                                    onClick={() => setActiveAgentId(agent.id)}
+                                    onClick={() => setActiveAgentIds(prev => prev.includes(agent.id) ? prev.filter(id => id !== agent.id) : [...prev, agent.id])}
                                     className={cn(
                                         "text-xs px-2.5 py-1 rounded-full border transition-colors",
-                                        activeAgentId === agent.id
+                                        activeAgentIds.includes(agent.id)
                                             ? `${agent.color} bg-opacity-20 border-${agent.color.replace('bg-', '')}`
                                             : "hover:bg-muted bg-transparent border-transparent"
                                     )}
@@ -188,7 +188,7 @@ export function WritersRoomChat() {
                     <div className="relative flex items-center">
                         <input
                             className="w-full bg-muted border-transparent focus:border-primary focus:ring-1 focus:ring-primary rounded-full pl-4 pr-12 py-3 text-sm transition-all outline-none"
-                            placeholder={`Pitch to ${activeAgent?.name}...`}
+                            placeholder={activeAgents.length === 1 ? `Pitch to ${activeAgents[0].name}...` : activeAgents.length > 1 ? `Pitch to the Room (${activeAgents.length} agents)...` : `Pitch to anyone...`}
                             value={input}
                             onChange={handleInputChange}
                         />
