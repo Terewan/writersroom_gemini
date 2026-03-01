@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { BookOpen, Users, SplitSquareHorizontal, Settings, FileText, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAppStore } from '@/lib/store'
 
 type Tab = 'summary' | 'characters' | 'rules' | 'themes' | 'proposals'
 
@@ -34,8 +35,14 @@ const MOCK_PROPOSALS: Proposal[] = [
     }
 ]
 
-export function ShowBible({ logline, coreHook, onLoglineChange, onHookChange }: { logline?: string, coreHook?: string, onLoglineChange?: (val: string) => void, onHookChange?: (val: string) => void }) {
+export function ShowBible() {
     const [activeTab, setActiveTab] = useState<Tab>('summary')
+    const { globalLogline, globalHook, setGlobalLogline, setGlobalHook, initializeStore } = useAppStore()
+
+    // Initialize the store from local storage on mount (handles page refresh)
+    useEffect(() => {
+        initializeStore()
+    }, [initializeStore])
 
     const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
         { id: 'summary', label: 'Premise', icon: <BookOpen className="w-4 h-4" /> },
@@ -46,18 +53,25 @@ export function ShowBible({ logline, coreHook, onLoglineChange, onHookChange }: 
     ]
 
     // Local state to track edits before saving
-    const [localLogline, setLocalLogline] = useState(logline || '')
-    const [localHook, setLocalHook] = useState(coreHook || '')
+    const [localLogline, setLocalLogline] = useState('')
+    const [localHook, setLocalHook] = useState('')
+
+    // Sync local state when global state loads from storage
+    useEffect(() => {
+        if (globalLogline) setLocalLogline(globalLogline)
+        if (globalHook) setLocalHook(globalHook)
+    }, [globalLogline, globalHook])
+
     const [savedState, setSavedState] = useState<'idle' | 'saved_logline' | 'saved_hook'>('idle')
 
     const handleSaveLogline = () => {
-        onLoglineChange?.(localLogline)
+        setGlobalLogline(localLogline)
         setSavedState('saved_logline')
         setTimeout(() => setSavedState('idle'), 2000)
     }
 
     const handleSaveHook = () => {
-        onHookChange?.(localHook)
+        setGlobalHook(localHook)
         setSavedState('saved_hook')
         setTimeout(() => setSavedState('idle'), 2000)
     }

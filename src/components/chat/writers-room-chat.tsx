@@ -4,6 +4,7 @@ import { useChat } from '@ai-sdk/react'
 import { useState, useRef, useEffect } from 'react'
 import { Send, User, AlertCircle, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useAppStore } from '@/lib/store'
 
 interface ChatAgent {
     id: string
@@ -20,7 +21,8 @@ const MOCK_AGENTS: ChatAgent[] = [
     { id: '2', name: 'Sarah', role: 'Character Specialist', color: 'bg-rose-500', provider: 'anthropic', model: 'claude-3-5-sonnet-20240620', prompt: 'You are Sarah, a character psychology expert. You focus purely on emotional motivations and arcs.' },
 ]
 
-export function WritersRoomChat({ currentLogline, currentHook }: { currentLogline?: string, currentHook?: string }) {
+export function WritersRoomChat() {
+    const { globalLogline, globalHook } = useAppStore()
     const [activeAgentId, setActiveAgentId] = useState<string>(MOCK_AGENTS[0].id)
     const [roundsTotal, setRoundsTotal] = useState<number>(3)
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -51,8 +53,8 @@ export function WritersRoomChat({ currentLogline, currentHook }: { currentLoglin
                 name: activeAgent?.name
             },
             showBibleContext: {
-                logline: currentLogline,
-                coreHook: currentHook
+                logline: globalLogline,
+                coreHook: globalHook
             },
             userKeys: userKeys
         }
