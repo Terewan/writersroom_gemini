@@ -20,7 +20,7 @@ const MOCK_AGENTS: ChatAgent[] = [
     { id: '2', name: 'Sarah', role: 'Character Specialist', color: 'bg-rose-500', provider: 'anthropic', model: 'claude-3-5-sonnet-20240620', prompt: 'You are Sarah, a character psychology expert. You focus purely on emotional motivations and arcs.' },
 ]
 
-export function WritersRoomChat() {
+export function WritersRoomChat({ currentLogline, currentHook }: { currentLogline?: string, currentHook?: string }) {
     const [activeAgentId, setActiveAgentId] = useState<string>(MOCK_AGENTS[0].id)
     const [roundsTotal, setRoundsTotal] = useState<number>(3)
     const messagesEndRef = useRef<HTMLDivElement>(null)
@@ -35,6 +35,10 @@ export function WritersRoomChat() {
                 model: activeAgent?.model,
                 systemPrompt: activeAgent?.prompt,
                 name: activeAgent?.name
+            },
+            showBibleContext: {
+                logline: currentLogline,
+                coreHook: currentHook
             }
         }
     })

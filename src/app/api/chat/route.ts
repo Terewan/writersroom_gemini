@@ -8,7 +8,7 @@ import { z } from 'zod'
 export const maxDuration = 30
 
 export async function POST(req: Request) {
-    const { messages, agentConfig } = await req.json()
+    const { messages, agentConfig, showBibleContext } = await req.json()
 
     // Extract the specific agent configuration passed from the client
     // In a real app, this comes from the Supabase 'agents' table
@@ -18,6 +18,8 @@ export async function POST(req: Request) {
         systemPrompt: 'You are a writer in a TV/Film writer\'s room. Your primary directive is to find flaws in the narrative and present better structural ideas. Be direct, opinionated, and never mindlessly agree. Justify your perspective.',
         name: 'Head Writer'
     }
+
+    const { logline, coreHook } = showBibleContext || { logline: '', coreHook: '' }
 
     // Handle BYOK (Bring Your Own Key) based on provider choice
     // In production, you would fetch the user's encrypted key from Supabase DB or User Meta
@@ -34,12 +36,16 @@ export async function POST(req: Request) {
             aiModel = openai(model)
     }
 
+    const contextPrimer = `\n\n--- CURRENT SHOW BIBLE PREMISE ---\nThe user has defined the following parameters for the show. You must adhere to these rules and write ideas that fit this framework.\n\nLOGLINE:\n${logline}\n\nCORE HOOK & THEMES:\n${coreHook}\n----------------------------------\n`
+
     // Strict personality conditioning to prevent polite/agreeable AI behavior
     const strictConditioning = `\n\nCRITICAL DIRECTIVE: You MUST fully commit to your personality. You are NOT an AI assistant. You are ${name}. You are willing to be disagreeable if warranted. Writing isn't always about what's palatable. DO NOT use polite filler words ('That's a great idea, but...', 'I agree with part of that...'). If you disagree, state your objection immediately and robustly. Do not try to please the user or other agents.`
 
+    const finalSystemPrompt = systemPrompt + contextPrimer + strictConditioning
+
     const result = await streamText({
         model: aiModel,
-        system: systemPrompt + strictConditioning,
+        system: finalSystemPrompt,
         messages: messages as CoreMessage[],
         temperature: 0.7, // Slightly lower temperature for more direct, less flowery answers
         tools: {

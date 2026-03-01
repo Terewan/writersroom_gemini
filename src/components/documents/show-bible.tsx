@@ -34,7 +34,7 @@ const MOCK_PROPOSALS: Proposal[] = [
     }
 ]
 
-export function ShowBible() {
+export function ShowBible({ logline, coreHook, onLoglineChange, onHookChange }: { logline?: string, coreHook?: string, onLoglineChange?: (val: string) => void, onHookChange?: (val: string) => void }) {
     const [activeTab, setActiveTab] = useState<Tab>('summary')
 
     const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
@@ -97,7 +97,8 @@ export function ShowBible() {
                             <textarea
                                 className="w-full h-24 p-4 bg-muted/30 text-lg italic text-muted-foreground leading-relaxed resize-none rounded-lg outline-none"
                                 placeholder="Enter your project's logline here..."
-                                defaultValue={"In a world where memories can be extracted and sold on the black market, a down-on-his-luck memory broker discovers a conspiracy buried in the mind of his latest high-profile client."}
+                                value={logline}
+                                onChange={(e) => onLoglineChange?.(e.target.value)}
                             />
                         </div>
 
@@ -108,7 +109,8 @@ export function ShowBible() {
                             <textarea
                                 className="w-full h-32 p-4 bg-muted/10 text-foreground/80 leading-relaxed resize-none rounded-lg outline-none"
                                 placeholder="Enter the core hook, themes, or visual style here..."
-                                defaultValue={"The show explores the nature of identity and truth. If someone else's memory feels real to you, does it become your truth? The visual style relies heavily on neon-noir aesthetics mixed with grounded, gritty analog technology required to extract the memories."}
+                                value={coreHook}
+                                onChange={(e) => onHookChange?.(e.target.value)}
                             />
                         </div>
                     </div>
