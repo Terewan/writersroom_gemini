@@ -7,6 +7,7 @@ import {
     MessageSquare,
     Settings,
     Users,
+    User,
     PanelLeftClose,
     PanelLeft,
 } from 'lucide-react'
@@ -17,8 +18,9 @@ import { cn } from '@/lib/utils'
 const navItems = [
     { href: '/room', label: "Writer's Room", icon: MessageSquare },
     { href: '/board', label: 'Beat Board', icon: LayoutDashboard },
-    { href: '/characters', label: 'Characters', icon: Users },
     { href: '/bible', label: 'Show Bible', icon: BookOpen },
+    { href: '/characters', label: 'Characters', icon: User },
+    { href: '/agents', label: 'AI Agents', icon: Users },
     { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
