@@ -90,17 +90,27 @@ export function ShowBible() {
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
                 {activeTab === 'summary' && (
                     <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-                        <h3 className="text-2xl font-bold mb-4">Project Logline</h3>
-                        <div className="p-4 bg-muted/30 rounded-lg border">
-                            <p className="text-lg italic text-muted-foreground leading-relaxed">
-                                "In a world where memories can be extracted and sold on the black market, a down-on-his-luck memory broker discovers a conspiracy buried in the mind of his latest high-profile client."
-                            </p>
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-2xl font-bold">Project Logline</h3>
+                        </div>
+                        <div className="p-0 rounded-lg border focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
+                            <textarea
+                                className="w-full h-24 p-4 bg-muted/30 text-lg italic text-muted-foreground leading-relaxed resize-none rounded-lg outline-none"
+                                placeholder="Enter your project's logline here..."
+                                defaultValue={"In a world where memories can be extracted and sold on the black market, a down-on-his-luck memory broker discovers a conspiracy buried in the mind of his latest high-profile client."}
+                            />
                         </div>
 
-                        <h3 className="text-xl font-bold mt-8 mb-4">Core Hook</h3>
-                        <p className="text-foreground/80 leading-relaxed">
-                            The show explores the nature of identity and truth. If someone else's memory feels real to you, does it become your truth? The visual style relies heavily on neon-noir aesthetics mixed with grounded, gritty analog technology required to extract the memories.
-                        </p>
+                        <div className="flex items-center justify-between mt-8 mb-4">
+                            <h3 className="text-xl font-bold">Core Hook</h3>
+                        </div>
+                        <div className="p-0 rounded-lg border focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all">
+                            <textarea
+                                className="w-full h-32 p-4 bg-muted/10 text-foreground/80 leading-relaxed resize-none rounded-lg outline-none"
+                                placeholder="Enter the core hook, themes, or visual style here..."
+                                defaultValue={"The show explores the nature of identity and truth. If someone else's memory feels real to you, does it become your truth? The visual style relies heavily on neon-noir aesthetics mixed with grounded, gritty analog technology required to extract the memories."}
+                            />
+                        </div>
                     </div>
                 )}
 
