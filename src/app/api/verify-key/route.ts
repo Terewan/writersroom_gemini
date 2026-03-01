@@ -29,7 +29,7 @@ export async function POST(req: Request) {
                     break;
                 case 'gemini':
                     const customGoogle = createGoogleGenerativeAI({ apiKey })
-                    aiModel = customGoogle('gemini-1.5-pro')
+                    aiModel = customGoogle('models/gemini-1.5-flash-latest')
                     break;
                 default:
                     return NextResponse.json({ valid: false, error: 'Unknown provider' }, { status: 400 })
