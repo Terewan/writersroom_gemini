@@ -15,7 +15,6 @@ import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/room', label: "Writer's Room", icon: MessageSquare },
     { href: '/board', label: 'Beat Board', icon: LayoutDashboard },
     { href: '/characters', label: 'Characters', icon: Users },

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { AppLayout } from '@/components/layout/app-layout'
 import { SplitPanel } from '@/components/layout/split-panel'
 import { WritersRoomChat } from '@/components/chat/writers-room-chat'
@@ -11,8 +11,26 @@ const DEFAULT_HOOK = "The show explores the nature of identity and truth. If som
 
 export default function RoomPage() {
     // In a real app with Supabase, these would initialize from DB
-    const [logline, setLogline] = useState(DEFAULT_LOGLINE)
-    const [coreHook, setCoreHook] = useState(DEFAULT_HOOK)
+    const [logline, setLoglineState] = useState(DEFAULT_LOGLINE)
+    const [coreHook, setCoreHookState] = useState(DEFAULT_HOOK)
+
+    // Load from local storage on mount
+    useEffect(() => {
+        const storedLogline = localStorage.getItem('WRITERS_ROOM_LOGLINE')
+        const storedHook = localStorage.getItem('WRITERS_ROOM_HOOK')
+        if (storedLogline) setLoglineState(storedLogline)
+        if (storedHook) setCoreHookState(storedHook)
+    }, [])
+
+    const setLogline = (newVal: string) => {
+        setLoglineState(newVal)
+        localStorage.setItem('WRITERS_ROOM_LOGLINE', newVal)
+    }
+
+    const setCoreHook = (newVal: string) => {
+        setCoreHookState(newVal)
+        localStorage.setItem('WRITERS_ROOM_HOOK', newVal)
+    }
 
     return (
         <AppLayout>
