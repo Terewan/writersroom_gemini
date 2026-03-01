@@ -19,12 +19,12 @@ export default function Home() {
             >
               Enter as Guest
             </Link>
-            <button
-              disabled
-              className="bg-secondary text-secondary-foreground opacity-50 cursor-not-allowed inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-11 px-8"
+            <Link
+              href="/login"
+              className="bg-secondary text-secondary-foreground hover:bg-secondary/80 inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors h-11 px-8"
             >
               Sign In / Register
-            </button>
+            </Link>
           </div>
         </div>
       </div>

@@ -79,39 +79,51 @@ export function WritersRoomChat() {
 
                 {messages.map((m, i) => {
                     const isUser = m.role === 'user'
+                    // Find which agent spoke if it's an assistant message
+                    // We assume m.name is passed, otherwise fallback to activeAgent
+                    const msgAgent = isUser ? null : MOCK_AGENTS.find(a => a.name === m.name) || activeAgent
 
                     return (
-                        <div key={m.id} className={cn("flex gap-3 max-w-[85%]", isUser ? "ml-auto flex-row-reverse" : "")}>
+                        <div key={m.id} className="flex gap-4 group hover:bg-muted/50 p-2 -mx-2 rounded-lg transition-colors">
                             <div className={cn(
-                                "flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white",
-                                isUser ? "bg-primary" : activeAgent?.color || "bg-zinc-600"
+                                "flex-shrink-0 w-10 h-10 rounded-md flex items-center justify-center text-white font-bold text-lg mt-0.5",
+                                isUser ? "bg-primary" : msgAgent?.color || "bg-zinc-600"
                             )}>
-                                {isUser ? <User size={16} /> : <span className="text-xs font-bold">{activeAgent?.name.charAt(0)}</span>}
+                                {isUser ? <User size={20} /> : msgAgent?.name.charAt(0)}
                             </div>
 
-                            <div className={cn(
-                                "flex flex-col gap-1",
-                                isUser ? "items-end" : "items-start"
-                            )}>
-                                <span className="text-xs font-medium text-muted-foreground">
-                                    {isUser ? 'Showrunner (You)' : activeAgent?.name}
-                                </span>
+                            <div className="flex flex-col flex-1 min-w-0">
+                                <div className="flex items-baseline gap-2 mb-1">
+                                    <span className="font-bold text-foreground">
+                                        {isUser ? 'Showrunner (You)' : msgAgent?.name}
+                                    </span>
+                                    {!isUser && (
+                                        <span className="text-xs bg-muted text-muted-foreground px-1.5 py-0.5 rounded">
+                                            {msgAgent?.role}
+                                        </span>
+                                    )}
+                                    <span className="text-xs text-muted-foreground ml-2">
+                                        Just now
+                                    </span>
+                                </div>
 
-                                <div className={cn(
-                                    "px-4 py-2 rounded-2xl text-sm whitespace-pre-wrap",
-                                    isUser
-                                        ? "bg-primary text-primary-foreground rounded-tr-sm"
-                                        : "bg-muted text-foreground rounded-tl-sm"
-                                )}>
+                                <div className="text-sm text-foreground/90 whitespace-pre-wrap leading-relaxed">
                                     {m.content}
                                 </div>
 
                                 {/* Tool Invocations visually represented */}
                                 {m.toolInvocations?.map((tool: any) => (
-                                    <div key={tool.toolCallId} className="flex items-start gap-2 text-xs text-muted-foreground mt-2 bg-secondary/50 p-2 rounded-md border">
-                                        <AlertCircle size={14} className="mt-0.5 text-orange-500" />
-                                        {tool.toolName === 'propose_bible_update' && <span>Proposed an update to the Show Bible.</span>}
-                                        {tool.toolName === 'query_show_bible' && <span>Consulted the Assistant Memory for context.</span>}
+                                    <div key={tool.toolCallId} className="flex flex-col gap-1 mt-3">
+                                        <div className="flex items-center gap-2 text-xs font-medium text-amber-600 dark:text-amber-500">
+                                            <AlertCircle size={14} />
+                                            {tool.toolName === 'propose_bible_update' && <span>Proposed an update to the Show Bible</span>}
+                                            {tool.toolName === 'query_show_bible' && <span>Consulted Assistant Memory</span>}
+                                        </div>
+                                        {tool.args && (
+                                            <div className="text-xs bg-background border rounded-md p-2 mt-1 text-muted-foreground font-mono">
+                                                {tool.args.keyword || tool.args.target || 'Tool execution details...'}
+                                            </div>
+                                        )}
                                     </div>
                                 ))}
                             </div>
