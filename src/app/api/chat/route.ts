@@ -1,6 +1,6 @@
-import { openai } from '@ai-sdk/openai'
-import { anthropic } from '@ai-sdk/anthropic'
-import { google } from '@ai-sdk/google'
+import { createOpenAI } from '@ai-sdk/openai'
+import { createAnthropic } from '@ai-sdk/anthropic'
+import { createGoogleGenerativeAI } from '@ai-sdk/google'
 import { streamText, tool, type CoreMessage } from 'ai'
 import { z } from 'zod'
 
@@ -8,7 +8,7 @@ import { z } from 'zod'
 export const maxDuration = 30
 
 export async function POST(req: Request) {
-    const { messages, agentConfig, showBibleContext } = await req.json()
+    const { messages, agentConfig, showBibleContext, userKeys } = await req.json()
 
     // Extract the specific agent configuration passed from the client
     // In a real app, this comes from the Supabase 'agents' table
@@ -21,19 +21,22 @@ export async function POST(req: Request) {
 
     const { logline, coreHook } = showBibleContext || { logline: '', coreHook: '' }
 
-    // Handle BYOK (Bring Your Own Key) based on provider choice
-    // In production, you would fetch the user's encrypted key from Supabase DB or User Meta
+    // Handle BYOK (Bring Your Own Key) based on provider choice and local user keys
     let aiModel
+
     switch (provider) {
         case 'anthropic':
-            aiModel = anthropic(model)
+            const customAnthropic = createAnthropic({ apiKey: userKeys?.anthropic || process.env.ANTHROPIC_API_KEY })
+            aiModel = customAnthropic(model)
             break
         case 'google':
-            aiModel = google(model)
+            const customGoogle = createGoogleGenerativeAI({ apiKey: userKeys?.gemini || process.env.GOOGLE_GENERATIVE_AI_API_KEY })
+            aiModel = customGoogle(model)
             break
         case 'openai':
         default:
-            aiModel = openai(model)
+            const customOpenAI = createOpenAI({ apiKey: userKeys?.openai || process.env.OPENAI_API_KEY })
+            aiModel = customOpenAI(model)
     }
 
     const contextPrimer = `\n\n--- CURRENT SHOW BIBLE PREMISE ---\nThe user has defined the following parameters for the show. You must adhere to these rules and write ideas that fit this framework.\n\nLOGLINE:\n${logline}\n\nCORE HOOK & THEMES:\n${coreHook}\n----------------------------------\n`

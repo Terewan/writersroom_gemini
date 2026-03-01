@@ -27,19 +27,34 @@ export function WritersRoomChat({ currentLogline, currentHook }: { currentLoglin
 
     const activeAgent = MOCK_AGENTS.find(a => a.id === activeAgentId)
 
+    const [userKeys, setUserKeys] = useState({ openai: '', anthropic: '', gemini: '' })
+    const [defaultModel, setDefaultModel] = useState('gpt-4o-mini')
+
+    // Load custom keys and settings
+    useEffect(() => {
+        setUserKeys({
+            openai: localStorage.getItem('WRITERS_ROOM_OPENAI_KEY') || '',
+            anthropic: localStorage.getItem('WRITERS_ROOM_ANTHROPIC_KEY') || '',
+            gemini: localStorage.getItem('WRITERS_ROOM_GEMINI_KEY') || ''
+        })
+        const storedModel = localStorage.getItem('WRITERS_ROOM_DEFAULT_MODEL')
+        if (storedModel) setDefaultModel(storedModel)
+    }, [])
+
     const { messages, input, handleInputChange, handleSubmit, isLoading } = useChat({
         api: '/api/chat',
         body: {
             agentConfig: {
-                provider: activeAgent?.provider,
-                model: activeAgent?.model,
+                provider: activeAgent?.provider || (defaultModel.includes('claude') ? 'anthropic' : defaultModel.includes('gemini') ? 'google' : 'openai'),
+                model: activeAgent?.model || defaultModel,
                 systemPrompt: activeAgent?.prompt,
                 name: activeAgent?.name
             },
             showBibleContext: {
                 logline: currentLogline,
                 coreHook: currentHook
-            }
+            },
+            userKeys: userKeys
         }
     })
 
